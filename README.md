@@ -58,3 +58,6 @@ In today's fast-paced world, families are becoming more disconnected, and many m
 
 ### Buffer Days (5 Days)
 🚀 To be used for unexpected bugs, delays, or refining features.
+
+
+![alt text](image.png)
