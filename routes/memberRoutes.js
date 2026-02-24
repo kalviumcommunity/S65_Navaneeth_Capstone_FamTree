@@ -25,4 +25,43 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ── POST /api/members ───────────────────────────────────────
+// Create a new family member
+router.post('/', async (req, res) => {
+  try {
+    const { name, relation, age, parentId } = req.body;
+
+    // Validate required fields
+    if (!name || !relation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error: "name" and "relation" are required.',
+      });
+    }
+
+    // Build a new Member document
+    const member = new Member({
+      name,
+      relation,
+      // Only set optional fields if provided
+      ...(age !== undefined && { age }),
+      ...(parentId !== undefined && { parentId }),
+    });
+
+    // Save to MongoDB
+    const savedMember = await member.save();
+
+    // Return the created member
+    res.status(201).json({
+      success: true,
+      data: savedMember,
+    });
+  } catch (error) {
+    console.error('Error creating member:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Could not create member.',
+    });
+  }
+});
 module.exports = router;
