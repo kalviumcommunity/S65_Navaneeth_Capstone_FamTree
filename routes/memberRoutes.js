@@ -64,4 +64,50 @@ router.post('/', async (req, res) => {
     });
   }
 });
+
+// ── PUT /api/members/:id ────────────────────────────────────
+// Update an existing family member by their MongoDB ID
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, relation, age, parentId } = req.body;
+
+    // Build an object with only the fields the client sent
+    // This way we never accidentally overwrite fields with undefined
+    const updates = {};
+    if (name      !== undefined) updates.name      = name;
+    if (relation  !== undefined) updates.relation  = relation;
+    if (age       !== undefined) updates.age       = age;
+    if (parentId  !== undefined) updates.parentId  = parentId;
+
+    // Find the member by ID and apply updates
+    // { new: true }          → return the updated document, not the old one
+    // { runValidators: true } → enforce schema rules on the updated values
+    const updatedMember = await Member.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    // If no document matched the ID, return 404
+    if (!updatedMember) {
+      return res.status(404).json({
+        success: false,
+        message: `No member found with id: ${req.params.id}`,
+      });
+    }
+
+    // Return the updated member
+    res.status(200).json({
+      success: true,
+      data: updatedMember,
+    });
+  } catch (error) {
+    console.error('Error updating member:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error. Could not update member.',
+    });
+  }
+});
+
 module.exports = router;
