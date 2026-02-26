@@ -61,3 +61,11 @@ In today's fast-paced world, families are becoming more disconnected, and many m
 
 
 ![alt text](image.png)
+
+## Completed Work
+
+- Connected the backend to MongoDB using `mongoose`.
+- Implemented API endpoints: `GET /api/members`, `POST /api/members`, and `PUT /api/members/:id`.
+- Deployed the backend to Render: https://famtree-backend.onrender.com/api/members
+
+More work: frontend integration, authentication, and additional endpoints planned.
