@@ -6,6 +6,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const memberRoutes = require('./routes/memberRoutes');
+const userRoutes   = require('./routes/userRoutes');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json()); // Parse incoming JSON request bodies
 
 // ── Routes ─────────────────────────────────────────────────
 app.use('/api/members', memberRoutes);
+app.use('/api/users',   userRoutes);
 
 // ── MongoDB Connection ──────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI;
