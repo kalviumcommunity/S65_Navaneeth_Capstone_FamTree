@@ -69,3 +69,19 @@ In today's fast-paced world, families are becoming more disconnected, and many m
 - Deployed the backend to Render: https://famtree-backend.onrender.com/api/members
 
 More work: frontend integration, authentication, and additional endpoints planned.
+
+### Database Read and Write Implementation
+
+The FamTree backend is connected to MongoDB Atlas using Mongoose.
+
+Database Read:
+- Implemented using GET /api/members
+- Uses Member.find() to fetch all family members from MongoDB
+- Returns JSON response from the database
+
+Database Write:
+- Implemented using POST /api/members
+- Uses new Member() and .save() to insert data into MongoDB
+- PUT /api/members/:id updates existing records using findByIdAndUpdate()
+
+All API endpoints are connected to a live MongoDB database and perform real-time read and write operations.

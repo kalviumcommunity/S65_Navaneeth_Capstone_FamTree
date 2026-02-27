@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
 // Create a new family member
 router.post('/', async (req, res) => {
   try {
-    const { name, relation, age, parentId } = req.body;
+    const { name, relation, age, parentId, createdBy } = req.body;
 
     // Validate required fields
     if (!name || !relation) {
@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
     const member = new Member({
       name,
       relation,
-      // Only set optional fields if provided
+      createdBy,
       ...(age !== undefined && { age }),
       ...(parentId !== undefined && { parentId }),
     });
