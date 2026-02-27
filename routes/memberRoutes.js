@@ -9,7 +9,9 @@ const Member = require('../models/Member');
 router.get('/', async (req, res) => {
   try {
     // Fetch every member document from MongoDB
-    const members = await Member.find();
+    const members = await Member.find()
+      .populate('createdBy', 'name email')
+      .populate('parentId', 'name relation');
 
     res.status(200).json({
       success: true,

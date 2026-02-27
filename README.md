@@ -85,3 +85,19 @@ Database Write:
 - PUT /api/members/:id updates existing records using findByIdAndUpdate()
 
 All API endpoints are connected to a live MongoDB database and perform real-time read and write operations.
+
+### Entity Relationship Implementation
+
+The FamTree database implements two relationships:
+
+1. User → Member (One-to-Many)
+   - Each Member document stores createdBy as a reference to User.
+   - Implemented using ref: "User".
+   - Resolved using Mongoose populate().
+
+2. Member → Member (Self-referencing Tree)
+   - Each Member can reference another Member via parentId.
+   - Enables hierarchical family tree structure.
+   - Resolved using populate("parentId").
+
+The GET /api/members endpoint demonstrates relationship resolution using populate().
