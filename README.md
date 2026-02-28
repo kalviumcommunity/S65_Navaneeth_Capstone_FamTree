@@ -101,3 +101,25 @@ The FamTree database implements two relationships:
    - Resolved using populate("parentId").
 
 The GET /api/members endpoint demonstrates relationship resolution using populate().
+
+### Frontend Deployment (Vercel)
+
+The React frontend is deployed using Vercel.
+
+Deployment Steps:
+
+The frontend is located inside the client folder.
+
+The project was imported into Vercel from GitHub.
+
+The Root Directory was set to client.
+
+The build command used: npm run build
+
+The output directory configured: dist
+
+Vite generates optimized production files inside the dist folder, which Vercel serves as a static site.
+
+Live Frontend URL:
+
+https://your-vercel-url.vercel.app
