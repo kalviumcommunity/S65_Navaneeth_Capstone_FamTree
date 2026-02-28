@@ -1,10 +1,12 @@
+import './App.css'
+
 function App() {
   return (
-    <div>
-      <h1>FamTree Frontend Initialized</h1>
-      <p>React + Vite setup completed successfully.</p>
-    </div>
-  );
+    <main className="app-container">
+      <h1 className="app-title">FamTree</h1>
+      <p className="app-subtitle">Family Tree Visualization Platform</p>
+    </main>
+  )
 }
 
-export default App;
+export default App
