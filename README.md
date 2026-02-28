@@ -120,6 +120,4 @@ The output directory configured: dist
 
 Vite generates optimized production files inside the dist folder, which Vercel serves as a static site.
 
-Live Frontend URL:
-
-https://your-vercel-url.vercel.app
+Live Frontend URL:  https://famtree-one.vercel.app/
