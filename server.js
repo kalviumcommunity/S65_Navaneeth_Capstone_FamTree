@@ -7,16 +7,37 @@ require('dotenv').config();
 
 const memberRoutes = require('./routes/memberRoutes');
 const userRoutes   = require('./routes/userRoutes');
+const aiRoutes     = require('./routes/aiRoutes');
 
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
-app.use(cors());          // Allow cross-origin requests (e.g. from a React frontend)
+// Allow requests from the deployed Vercel frontend and local dev
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL?.replace(/\/$/, ''), // strip trailing slash if present
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. Postman, server-to-server)
+      const normalizedOrigin = origin?.replace(/\/$/, '');
+      if (!origin || allowedOrigins.includes(normalizedOrigin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json()); // Parse incoming JSON request bodies
 
 // ── Routes ─────────────────────────────────────────────────
 app.use('/api/members', memberRoutes);
 app.use('/api/users',   userRoutes);
+app.use('/api/ai',      aiRoutes);
 
 // ── MongoDB Connection ──────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI;

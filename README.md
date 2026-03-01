@@ -120,4 +120,63 @@ The output directory configured: dist
 
 Vite generates optimized production files inside the dist folder, which Vercel serves as a static site.
 
+Live Frontend URL:
+
+https://your-vercel-url.vercel.app
+
+## 🤖 AI Chatbot Integration
+Overview
+
+FamTree includes an AI-powered chatbot integrated using Google Gemini (LLM API).
+The chatbot helps users understand how to use the platform and manage family relationships.
+
+The integration follows a secure full-stack architecture:
+
+Frontend → Backend → LLM API → Backend → Frontend
+
+# 🧠 Architecture
+Frontend (React + Vite)
+
+Floating chatbot button
+
+Chat modal with message history
+
+Sends user input to backend
+
+Displays AI response
+
+Backend (Express)
+
+New route: POST /api/ai/chat
+
+Accepts:
+
+{
+  "message": "string"
+}
+
+Calls Gemini API using GEMINI_API_KEY
+
+Returns:
+
+{
+  "reply": "string"
+}
+# 🔐 Security
+
+The LLM API call is handled in the backend to:
+
+Keep API keys secure
+
+Prevent exposure in browser
+
+Follow production-level architecture
+
+# 🌍 Deployment
+
+Backend deployed on Render
+
+Frontend deployed on Vercel
+
+Chatbot works in production
 Live Frontend URL:  https://famtree-one.vercel.app/
