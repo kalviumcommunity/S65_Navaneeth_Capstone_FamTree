@@ -1,8 +1,16 @@
 import { useState } from 'react';
+import './ChatBot.css';
 
-// In development, VITE_API_URL is empty so Vite's proxy handles /api → localhost:5000
-// In production (Vercel), VITE_API_URL = https://famtree-backend.onrender.com
-const API_URL = `${import.meta.env.VITE_API_URL || ''}/api/ai/chat`;
+// In development, Vite's proxy forwards /api → localhost:5000.
+// In production, VITE_API_URL must point to the backend (e.g. https://famtree-backend.onrender.com).
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = `${BASE_URL}/api/ai/chat`;
+
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  console.warn(
+    '[ChatBot] VITE_API_URL is not set. API calls will target the current origin, which will fail on a static frontend host like Vercel.'
+  );
+}
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +22,7 @@ export default function ChatBot() {
     const text = input.trim();
     if (!text || loading) return;
 
-    const userMsg = { role: 'user', text };
+    const userMsg = { id: crypto.randomUUID(), role: 'user', text };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
@@ -25,11 +33,25 @@ export default function ChatBot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
       });
+
+      // Guard against non-JSON responses (e.g. HTML fallback from Vercel)
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        throw new Error(`Server responded with ${res.status}`);
+      }
+
       const data = await res.json();
-      const aiMsg = { role: 'ai', text: data.reply || data.error || 'No response.' };
+      const aiMsg = {
+        id: crypto.randomUUID(),
+        role: 'ai',
+        text: data.reply || data.error || 'No response.',
+      };
       setMessages((prev) => [...prev, aiMsg]);
     } catch {
-      setMessages((prev) => [...prev, { role: 'ai', text: 'Failed to reach the server.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: 'ai', text: 'Failed to reach the server.' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -42,7 +64,7 @@ export default function ChatBot() {
   return (
     <>
       {/* Floating toggle button */}
-      <button onClick={() => setIsOpen((o) => !o)} style={styles.fab}>
+      <button className="chatbot-fab" onClick={() => setIsOpen((o) => !o)}>
         {isOpen ? (
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -57,38 +79,33 @@ export default function ChatBot() {
 
       {/* Chat modal */}
       {isOpen && (
-        <div style={styles.modal}>
-          <div style={styles.header}>FamTree AI Chat</div>
+        <div className="chatbot-modal">
+          <div className="chatbot-header">FamTree AI Chat</div>
 
-          <div style={styles.body}>
+          <div className="chatbot-body">
             {messages.length === 0 && (
-              <p style={styles.placeholder}>Ask me anything about your family tree!</p>
+              <p className="chatbot-placeholder">Ask me anything about your family tree!</p>
             )}
-            {messages.map((msg, i) => (
+            {messages.map((msg) => (
               <div
-                key={i}
-                style={{
-                  ...styles.bubble,
-                  alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  background: msg.role === 'user' ? '#4f46e5' : '#e5e7eb',
-                  color: msg.role === 'user' ? '#fff' : '#111',
-                }}
+                key={msg.id}
+                className={`chatbot-bubble ${msg.role === 'user' ? 'chatbot-bubble--user' : 'chatbot-bubble--ai'}`}
               >
                 {msg.text}
               </div>
             ))}
-            {loading && <div style={{ ...styles.bubble, alignSelf: 'flex-start', background: '#e5e7eb' }}>Thinking…</div>}
+            {loading && <div className="chatbot-bubble chatbot-bubble--ai">Thinking…</div>}
           </div>
 
-          <div style={styles.footer}>
+          <div className="chatbot-footer">
             <input
-              style={styles.input}
+              className="chatbot-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type a message…"
             />
-            <button style={styles.sendBtn} onClick={sendMessage} disabled={loading}>
+            <button className="chatbot-send-btn" onClick={sendMessage} disabled={loading}>
               Send
             </button>
           </div>
@@ -97,93 +114,3 @@ export default function ChatBot() {
     </>
   );
 }
-
-/* ---- Inline styles ---- */
-const styles = {
-  fab: {
-    position: 'fixed',
-    bottom: 24,
-    right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-    color: '#fff',
-    fontSize: 24,
-    border: 'none',
-    cursor: 'pointer',
-    boxShadow: '0 6px 20px rgba(79,70,229,.45)',
-    zIndex: 1000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  modal: {
-    position: 'fixed',
-    bottom: 96,
-    right: 24,
-    width: 400,
-    height: 520,
-    borderRadius: 12,
-    background: '#fff',
-    boxShadow: '0 8px 24px rgba(0,0,0,.2)',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    zIndex: 1000,
-  },
-  header: {
-    padding: '12px 16px',
-    background: '#4f46e5',
-    color: '#fff',
-    fontWeight: 600,
-    fontSize: 15,
-  },
-  body: {
-    flex: 1,
-    padding: 12,
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-  },
-  placeholder: {
-    color: '#999',
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  bubble: {
-    maxWidth: '80%',
-    padding: '8px 12px',
-    borderRadius: 12,
-    fontSize: 14,
-    lineHeight: 1.45,
-    wordBreak: 'break-word',
-  },
-  footer: {
-    display: 'flex',
-    borderTop: '1px solid #e5e7eb',
-    padding: 8,
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    padding: '8px 10px',
-    border: '1px solid #d1d5db',
-    borderRadius: 8,
-    outline: 'none',
-    fontSize: 14,
-  },
-  sendBtn: {
-    padding: '8px 14px',
-    background: '#4f46e5',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    fontWeight: 600,
-    fontSize: 14,
-  },
-};

@@ -18,6 +18,13 @@ const allowedOrigins = [
   process.env.FRONTEND_URL?.replace(/\/$/, ''), // strip trailing slash if present
 ].filter(Boolean);
 
+if (!process.env.FRONTEND_URL) {
+  console.warn(
+    '⚠  FRONTEND_URL is not set. Only http://localhost:5173 will be allowed by CORS. ' +
+    'Set FRONTEND_URL to your deployed frontend origin for production.'
+  );
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -26,6 +33,7 @@ app.use(
       if (!origin || allowedOrigins.includes(normalizedOrigin)) {
         callback(null, true);
       } else {
+        console.warn(`CORS blocked request from origin: ${origin}`);
         callback(new Error(`CORS blocked: ${origin}`));
       }
     },
