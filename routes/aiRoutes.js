@@ -4,20 +4,46 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-// System prompt to make the AI behave as a FamTree assistant
-const systemPrompt = `
-You are an AI assistant for FamTree, a family tree visualization platform.
-Answer questions related to:
-- Adding family members
-- Understanding parent-child relationships
-- How to use the platform
-Keep answers short and helpful.
-`;
+// ── Simple in-memory rate limiter ───────────────────────────
+// Prevents unauthenticated abuse / cost run-up on the Groq API.
+const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 15; // per IP
+const ipHits = new Map();
+
+function rateLimiter(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const record = ipHits.get(ip) || { count: 0, start: now };
+
+  if (now - record.start > RATE_WINDOW_MS) {
+    // Window expired – reset
+    record.count = 1;
+    record.start = now;
+  } else {
+    record.count += 1;
+  }
+
+  ipHits.set(ip, record);
+
+  if (record.count > MAX_REQUESTS_PER_WINDOW) {
+    return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
+  }
+  next();
+}
+
+// System prompt – no leading/trailing whitespace so the model gets a clean input
+const systemPrompt =
+  'You are an AI assistant for FamTree, a family tree visualization platform. ' +
+  'Answer questions related to: adding family members, understanding parent-child ' +
+  'relationships, and how to use the platform. Keep answers short and helpful.';
+
+// AI model – configurable via environment variable
+const AI_MODEL = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
 
 // POST /api/ai/chat
 // Accepts: { message: "your question here" }
 // Returns: { reply: "AI response here" }
-router.post('/chat', async (req, res) => {
+router.post('/chat', rateLimiter, async (req, res) => {
   try {
     const { message } = req.body;
 
@@ -39,7 +65,7 @@ router.post('/chat', async (req, res) => {
     const response = await axios.post(
       url,
       {
-        model: 'llama-3.3-70b-versatile',
+        model: AI_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message },

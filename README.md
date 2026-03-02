@@ -125,58 +125,64 @@ Live Frontend URL:
 https://your-vercel-url.vercel.app
 
 ## 🤖 AI Chatbot Integration
-Overview
 
-FamTree includes an AI-powered chatbot integrated using Google Gemini (LLM API).
+### Overview
+
+FamTree includes an AI-powered chatbot integrated using the **Groq API** (LLM: llama-3.3-70b-versatile).
 The chatbot helps users understand how to use the platform and manage family relationships.
 
 The integration follows a secure full-stack architecture:
 
-Frontend → Backend → LLM API → Backend → Frontend
+```
+Frontend → Backend → Groq API → Backend → Frontend
+```
 
-# 🧠 Architecture
-Frontend (React + Vite)
+### Architecture
 
-Floating chatbot button
+**Frontend (React + Vite)**
+- Floating chatbot button
+- Chat modal with message history
+- Sends user input to backend
+- Displays AI response
 
-Chat modal with message history
-
-Sends user input to backend
-
-Displays AI response
-
-Backend (Express)
-
-New route: POST /api/ai/chat
+**Backend (Express)**
+- Route: `POST /api/ai/chat`
+- Rate-limited (15 requests/min per IP)
 
 Accepts:
 
-{
-  "message": "string"
-}
+```json
+{ "message": "your question here" }
+```
 
-Calls Gemini API using GEMINI_API_KEY
+Calls **Groq API** using `GROQ_API_KEY`
 
 Returns:
 
-{
-  "reply": "string"
-}
-# 🔐 Security
+```json
+{ "reply": "AI response here" }
+```
+### Security
 
-The LLM API call is handled in the backend to:
+- The LLM API call is handled server-side to keep API keys out of the browser.
+- The `/api/ai/chat` endpoint is rate-limited (15 req/min per IP) to prevent abuse.
 
-Keep API keys secure
+### Environment Variables
 
-Prevent exposure in browser
+| Variable | Where | Required | Description |
+|---|---|---|---|
+| `MONGO_URI` | Backend | Yes | MongoDB connection string |
+| `GROQ_API_KEY` | Backend | Yes | Groq API key for chatbot |
+| `AI_MODEL` | Backend | No | LLM model name (default: `llama-3.3-70b-versatile`) |
+| `FRONTEND_URL` | Backend | **Yes (prod)** | Deployed frontend origin, e.g. `https://famtree.vercel.app`. Required for CORS. |
+| `PORT` | Backend | No | Server port (default: `5000`) |
+| `VITE_API_URL` | Frontend | **Yes (prod)** | Backend origin, e.g. `https://famtree-backend.onrender.com`. Without this, API calls hit the frontend host and fail. |
 
-Follow production-level architecture
+### Deployment
 
-# 🌍 Deployment
+- Backend deployed on **Render**
+- Frontend deployed on **Vercel**
+- CORS allows `http://localhost:5173` and the origin in `FRONTEND_URL`
+- Chatbot works in production when all env vars above are configured
 
-Backend deployed on Render
-
-Frontend deployed on Vercel
-
-Chatbot works in production
-Live Frontend URL:  https://famtree-one.vercel.app/
+**Live Frontend URL:** https://famtree-one.vercel.app/
