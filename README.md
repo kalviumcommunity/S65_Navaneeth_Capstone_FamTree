@@ -1,188 +1,164 @@
 # Capstone Project: FamTree
 
-## Project Idea Brief
+## Project Overview
 
 **Project Name:** FamTree
 
-**Idea:** FamTree is a simple family tree visualization platform where users can create, update, and manage family relationships. It allows users to add family members, edit details, and share their family trees. The platform ensures secure access and smooth collaboration.
-
-In today's fast-paced world, families are becoming more disconnected, and many members may not even know how they are related. As generations grow, it becomes increasingly difficult to keep track of family connections, shared history, and relationships. FamTree addresses this need by providing an interactive platform where users can easily visualize their family tree, strengthen bonds, and preserve their lineage for future generations. This project fosters a sense of belonging by keeping families connected, no matter how far apart they are.
+**Description:** FamTree is a family tree visualization platform where users can create, update, and manage family relationships. It allows users to add family members, edit details, and share their family trees with secure access and smooth collaboration.
 
 ## Key Features
 
-- ✅ **Family Tree Creation** – Add and visualize relationships dynamically
-- ✅ **CRUD Operations** – Users can create, read, update, and delete family members
-- ✅ **User Authentication** – Secure login via JWT authentication
-- ✅ **Collaborative Input** – Shareable links for family members to contribute
-- ✅ **Profile Management** – Users can edit their profiles
+- ✅ Family Tree Creation – Add and visualize relationships dynamically
+- ✅ CRUD Operations – Create, read, update, and delete family members
+- ✅ User Authentication – Secure login via JWT authentication
+- ✅ Collaborative Input – Shareable links for family members to contribute
+- ✅ Profile Management – Users can edit their profiles
+- ✅ AI Chatbot – Groq-powered assistant for platform guidance
+
+---
+
+## Assignment Completion
+
+### 1. Database Schema Created
+
+The FamTree database uses MongoDB with Mongoose for schema definition.
+
+**Collections:**
+- **User** – Stores user account information
+- **Member** – Stores family member details with references to User and parent Member
+
+---
+
+### 2. GET API Used
+
+**Endpoint:** `GET /api/members`
+
+- Fetches all family members from MongoDB
+- Uses `Member.find()` with Mongoose
+- Resolves relationships using `.populate()` for User and parent Member references
+- Returns JSON array of family members
+
+---
+
+### 3. POST API Used
+
+**Endpoint:** `POST /api/members`
+
+- Creates a new family member in MongoDB
+- Uses `new Member()` and `.save()` to insert data
+- Accepts JSON body with member details
+- Returns created member object with ID
+
+---
+
+### 4. PUT API Used
+
+**Endpoint:** `PUT /api/members/:id`
+
+- Updates existing family member records
+- Uses `findByIdAndUpdate()` to modify data in MongoDB
+- Accepts member ID and updated fields
+- Returns updated member object
+
+---
+
+### 5. Deployed Backend Server
+
+**Platform:** Render
+
+**URL:** https://famtree-backend.onrender.com/api/members
+
+- Backend connected to MongoDB Atlas using Mongoose
+- All API endpoints deployed and operational
+- Environment variables configured for production
+
+---
+
+### 6. Database Read and Write Performed
+
+**Read Operations:**
+- GET endpoint retrieves family members in real-time from MongoDB
+
+**Write Operations:**
+- POST endpoint inserts new members into the database
+- PUT endpoint updates existing member records
+- All operations use live MongoDB Atlas connection
+
+---
+
+### 7. Implemented Relationship Between Entities in Database
+
+**Relationship 1: User → Member (One-to-Many)**
+- Each Member stores `createdBy` as a reference to User
+- Implemented using Mongoose `ref: "User"`
+- Resolved using `.populate("createdBy")`
+
+**Relationship 2: Member → Member (Self-referencing Tree)**
+- Each Member can reference a parent via `parentId`
+- Enables hierarchical family tree structure
+- Resolved using `.populate("parentId")`
+
+---
+
+### 8. Initialized a React/Frontend Application
+
+**Framework:** React with Vite
+
+**Setup:**
+- Project initialized inside `/client` folder
+- Build tool: Vite (optimized production builds)
+- Package manager: npm
+
+---
+
+### 9. Deployed Frontend Server
+
+**Platform:** Vercel
+
+**URL:** https://famtree-one.vercel.app/
+
+**Deployment Configuration:**
+- Root Directory: `client`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+---
+
+### 10. Created Frontend Components in React
+
+**Components:**
+- **Header** – Application title and subtitle
+- **Dashboard** – Main layout container
+- **MemberCard** – Displays family member information
+- **AddMemberForm** – Form to add new family members
+
+---
+
+### 11. Implemented LLM/AI-Autocomplete Functionality in Application
+
+**AI Service:** Groq API with `llama-3.3-70b-versatile` model
+
+**Architecture:**
+- Frontend sends user input to backend
+- Backend calls Groq API securely
+- Backend returns AI response to frontend
+- Floating chatbot UI displays interactions
+
+**Endpoint:** `POST /api/ai/chat`
+
+**Security:**
+- Rate-limited to 15 requests/min per IP
+- API keys stored server-side only
+- CORS configured for production domains
+
+**Environment Variables:**
+- `GROQ_API_KEY` – Groq API authentication
+- `AI_MODEL` – LLM model selection
+- `FRONTEND_URL` – CORS configuration
+- `VITE_API_URL` – Frontend backend URL
+
+---
 
 ## Project Timeline
 
-### Week 1: Project Setup & Planning (5 Days)
-- **Day 1:** Finalize project scope and tech stack (React, Node.js, MongoDB)
-- **Day 2:** Create wireframes and UI mockups
-- **Day 3:** Set up GitHub repo (README, project board)
-- **Day 4:** Plan database schema (users, family members, relationships)
-- **Day 5:** Install dependencies and configure the backend server
-
-### Week 2: Backend Development (6 Days)
-- **Day 6-7:** Set up Node.js, Express.js, and MongoDB
-- **Day 8-9:** Implement CRUD operations (GET, POST, PUT, DELETE) for family members
-- **Day 10:** Create JWT authentication for user login/signup
-- **Day 11:** Test APIs using Postman and fix errors
-
-### Week 3: Frontend Development (7 Days)
-- **Day 12:** Initialize React app and set up folder structure
-- **Day 13-14:** Build core UI components (Login, Dashboard, Family Tree)
-- **Day 15:** Implement API calls for user authentication and CRUD
-- **Day 16-17:** Implement forms for adding/editing family members
-
-### Week 4: Feature Enhancements (7 Days)
-- **Day 18:** Connect API to dynamically display the family tree
-- **Day 19-20:** Implement collaborative input (allow family members to edit tree)
-- **Day 21:** Add basic profile management (edit name, profile picture)
-- **Day 22-23:** Style UI with TailwindCSS
-- **Day 24:** Final testing of CRUD operations
-
-### Week 5: Testing & Deployment (7 Days)
-- **Day 25-26:** Write unit tests using Jest (test at least 5 key API routes)
-- **Day 27:** Debug issues and optimize performance
-- **Day 28:** Prepare Dockerfile and dockerize the application
-- **Day 29-30:** Deploy backend (Render/Heroku) and frontend (Vercel/Netlify)
-
-### Week 6: Finalization & Submission (7 Days)
-- **Day 31-32:** Get feedback from mentors/peers
-- **Day 33-34:** Implement feedback and fix UI issues
-- **Day 35-36:** Create project documentation and demo video
-- **Day 37:** Submit project and prepare for evaluation
-
-### Buffer Days (5 Days)
-🚀 To be used for unexpected bugs, delays, or refining features.
-
-
-![alt text](image.png)
-
-## Completed Work
-
-- Connected the backend to MongoDB using `mongoose`.
-- Implemented API endpoints: `GET /api/members`, `POST /api/members`, and `PUT /api/members/:id`.
-- Deployed the backend to Render: https://famtree-backend.onrender.com/api/members
-
-More work: frontend integration, authentication, and additional endpoints planned.
-
-### Database Read and Write Implementation
-
-The FamTree backend is connected to MongoDB Atlas using Mongoose.
-
-Database Read:
-- Implemented using GET /api/members
-- Uses Member.find() to fetch all family members from MongoDB
-- Returns JSON response from the database
-
-Database Write:
-- Implemented using POST /api/members
-- Uses new Member() and .save() to insert data into MongoDB
-- PUT /api/members/:id updates existing records using findByIdAndUpdate()
-
-All API endpoints are connected to a live MongoDB database and perform real-time read and write operations.
-
-### Entity Relationship Implementation
-
-The FamTree database implements two relationships:
-
-1. User → Member (One-to-Many)
-   - Each Member document stores createdBy as a reference to User.
-   - Implemented using ref: "User".
-   - Resolved using Mongoose populate().
-
-2. Member → Member (Self-referencing Tree)
-   - Each Member can reference another Member via parentId.
-   - Enables hierarchical family tree structure.
-   - Resolved using populate("parentId").
-
-The GET /api/members endpoint demonstrates relationship resolution using populate().
-
-### Frontend Deployment (Vercel)
-
-The React frontend is deployed using Vercel.
-
-Deployment Steps:
-
-The frontend is located inside the client folder.
-
-The project was imported into Vercel from GitHub.
-
-The Root Directory was set to client.
-
-The build command used: npm run build
-
-The output directory configured: dist
-
-Vite generates optimized production files inside the dist folder, which Vercel serves as a static site.
-
-Live Frontend URL:
-
-https://your-vercel-url.vercel.app
-
-## 🤖 AI Chatbot Integration
-
-### Overview
-
-FamTree includes an AI-powered chatbot integrated using the **Groq API** (LLM: llama-3.3-70b-versatile).
-The chatbot helps users understand how to use the platform and manage family relationships.
-
-The integration follows a secure full-stack architecture:
-
-```
-Frontend → Backend → Groq API → Backend → Frontend
-```
-
-### Architecture
-
-**Frontend (React + Vite)**
-- Floating chatbot button
-- Chat modal with message history
-- Sends user input to backend
-- Displays AI response
-
-**Backend (Express)**
-- Route: `POST /api/ai/chat`
-- Rate-limited (15 requests/min per IP)
-
-Accepts:
-
-```json
-{ "message": "your question here" }
-```
-
-Calls **Groq API** using `GROQ_API_KEY`
-
-Returns:
-
-```json
-{ "reply": "AI response here" }
-```
-### Security
-
-- The LLM API call is handled server-side to keep API keys out of the browser.
-- The `/api/ai/chat` endpoint is rate-limited (15 req/min per IP) to prevent abuse.
-
-### Environment Variables
-
-| Variable | Where | Required | Description |
-|---|---|---|---|
-| `MONGO_URI` | Backend | Yes | MongoDB connection string |
-| `GROQ_API_KEY` | Backend | Yes | Groq API key for chatbot |
-| `AI_MODEL` | Backend | No | LLM model name (default: `llama-3.3-70b-versatile`) |
-| `FRONTEND_URL` | Backend | **Yes (prod)** | Deployed frontend origin, e.g. `https://famtree.vercel.app`. Required for CORS. |
-| `PORT` | Backend | No | Server port (default: `5000`) |
-| `VITE_API_URL` | Frontend | **Yes (prod)** | Backend origin, e.g. `https://famtree-backend.onrender.com`. Without this, API calls hit the frontend host and fail. |
-
-### Deployment
-
-- Backend deployed on **Render**
-- Frontend deployed on **Vercel**
-- CORS allows `http://localhost:5173` and the origin in `FRONTEND_URL`
-- Chatbot works in production when all env vars above are configured
-
-**Live Frontend URL:** https://famtree-one.vercel.app/
+6 weeks completed with buffer days for optimization and unforeseen issues.
