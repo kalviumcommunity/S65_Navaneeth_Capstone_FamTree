@@ -1,164 +1,135 @@
-# Capstone Project: FamTree
+# FamTree (MERN Capstone)
 
-## Project Overview
+FamTree is a simple family tree visualization web app.
 
-**Project Name:** FamTree
+Users can:
+- Register / Login
+- Add, view, edit, and delete family members
+- Create a basic parent → child relationship (`parentId`)
+- Visualize a simple family hierarchy (nested layout)
 
-**Description:** FamTree is a family tree visualization platform where users can create, update, and manage family relationships. It allows users to add family members, edit details, and share their family trees with secure access and smooth collaboration.
-
-## Key Features
-
-- ✅ Family Tree Creation – Add and visualize relationships dynamically
-- ✅ CRUD Operations – Create, read, update, and delete family members
-- ✅ User Authentication – Secure login via JWT authentication
-- ✅ Collaborative Input – Shareable links for family members to contribute
-- ✅ Profile Management – Users can edit their profiles
-- ✅ AI Chatbot – Groq-powered assistant for platform guidance
+This project is intentionally beginner-friendly and interview-defendable:
+- No AI/chatbot features
+- No complex state libraries
+- Clear folder structure (controllers/routes/models)
 
 ---
 
-## Assignment Completion
+## Tech Stack
 
-### 1. Database Schema Created
+Frontend:
+- React + Vite
+- React Router
+- Axios
+- TailwindCSS
 
-The FamTree database uses MongoDB with Mongoose for schema definition.
+Backend:
+- Node.js + Express
+- MongoDB Atlas + Mongoose
+- JWT Authentication
 
-**Collections:**
-- **User** – Stores user account information
-- **Member** – Stores family member details with references to User and parent Member
-
----
-
-### 2. GET API Used
-
-**Endpoint:** `GET /api/members`
-
-- Fetches all family members from MongoDB
-- Uses `Member.find()` with Mongoose
-- Resolves relationships using `.populate()` for User and parent Member references
-- Returns JSON array of family members
+Deployment (recommended):
+- Frontend: Vercel
+- Backend: Render
 
 ---
 
-### 3. POST API Used
+## Folder Structure
 
-**Endpoint:** `POST /api/members`
+Backend:
 
-- Creates a new family member in MongoDB
-- Uses `new Member()` and `.save()` to insert data
-- Accepts JSON body with member details
-- Returns created member object with ID
+server/
+	app.js
+	config/
+		db.js
+	controllers/
+	middleware/
+	models/
+	routes/
 
----
+Frontend:
 
-### 4. PUT API Used
-
-**Endpoint:** `PUT /api/members/:id`
-
-- Updates existing family member records
-- Uses `findByIdAndUpdate()` to modify data in MongoDB
-- Accepts member ID and updated fields
-- Returns updated member object
-
----
-
-### 5. Deployed Backend Server
-
-**Platform:** Render
-
-**URL:** https://famtree-backend.onrender.com/api/members
-
-- Backend connected to MongoDB Atlas using Mongoose
-- All API endpoints deployed and operational
-- Environment variables configured for production
+client/src/
+	components/
+	context/
+	pages/
+	services/
 
 ---
 
-### 6. Database Read and Write Performed
+## Getting Started (Local)
 
-**Read Operations:**
-- GET endpoint retrieves family members in real-time from MongoDB
+### 1) Backend
 
-**Write Operations:**
-- POST endpoint inserts new members into the database
-- PUT endpoint updates existing member records
-- All operations use live MongoDB Atlas connection
+Create a `.env` in the project root (see `.env.example`).
 
----
+Install and run:
 
-### 7. Implemented Relationship Between Entities in Database
+```bash
+npm install
+npm run dev
+```
 
-**Relationship 1: User → Member (One-to-Many)**
-- Each Member stores `createdBy` as a reference to User
-- Implemented using Mongoose `ref: "User"`
-- Resolved using `.populate("createdBy")`
+Backend runs at: `http://localhost:5000`
 
-**Relationship 2: Member → Member (Self-referencing Tree)**
-- Each Member can reference a parent via `parentId`
-- Enables hierarchical family tree structure
-- Resolved using `.populate("parentId")`
+### 2) Frontend
 
----
+```bash
+cd client
+npm install
+npm run dev
+```
 
-### 8. Initialized a React/Frontend Application
+Frontend runs at: `http://localhost:5173`
 
-**Framework:** React with Vite
-
-**Setup:**
-- Project initialized inside `/client` folder
-- Build tool: Vite (optimized production builds)
-- Package manager: npm
+In development, Vite proxies `/api` calls to `http://localhost:5000`.
 
 ---
 
-### 9. Deployed Frontend Server
+## Environment Variables
 
-**Platform:** Vercel
+Backend (`.env`):
+- `MONGO_URI` – MongoDB connection string
+- `PORT` – backend port (default `5000`)
+- `JWT_SECRET` – secret key used to sign JWT tokens
+- `FRONTEND_URL` – allowed frontend origin for CORS (e.g. Vercel URL)
 
-**URL:** https://famtree-one.vercel.app/
-
-**Deployment Configuration:**
-- Root Directory: `client`
-- Build Command: `npm run build`
-- Output Directory: `dist`
-
----
-
-### 10. Created Frontend Components in React
-
-**Components:**
-- **Header** – Application title and subtitle
-- **Dashboard** – Main layout container
-- **MemberCard** – Displays family member information
-- **AddMemberForm** – Form to add new family members
+Frontend (`client/.env`):
+- `VITE_API_URL` – backend base URL (Render URL). Optional in dev.
 
 ---
 
-### 11. Implemented LLM/AI-Autocomplete Functionality in Application
+## API Routes
 
-**AI Service:** Groq API with `llama-3.3-70b-versatile` model
+Auth:
+- `POST /api/users/register` – create account (returns `{ token, user }`)
+- `POST /api/users/login` – login (returns `{ token, user }`)
 
-**Architecture:**
-- Frontend sends user input to backend
-- Backend calls Groq API securely
-- Backend returns AI response to frontend
-- Floating chatbot UI displays interactions
-
-**Endpoint:** `POST /api/ai/chat`
-
-**Security:**
-- Rate-limited to 15 requests/min per IP
-- API keys stored server-side only
-- CORS configured for production domains
-
-**Environment Variables:**
-- `GROQ_API_KEY` – Groq API authentication
-- `AI_MODEL` – LLM model selection
-- `FRONTEND_URL` – CORS configuration
-- `VITE_API_URL` – Frontend backend URL
+Members (protected — requires `Authorization: Bearer <token>`):
+- `GET /api/members`
+- `GET /api/members/:id`
+- `POST /api/members`
+- `PUT /api/members/:id`
+- `DELETE /api/members/:id`
 
 ---
 
-## Project Timeline
+## Deployment Notes
 
-6 weeks completed with buffer days for optimization and unforeseen issues.
+Backend (Render):
+- Set the backend env vars from `.env.example` in Render
+
+Frontend (Vercel):
+- Set `VITE_API_URL` to your Render backend URL
+
+---
+
+## Interview Notes (What to Explain)
+
+- How JWT works (token returned on login, sent in `Authorization` header)
+- How MongoDB relationships work:
+	- `Member.createdBy` links members to a user
+	- `Member.parentId` links a child to a parent (self-reference)
+- How the frontend builds the tree:
+	- group members by `parentId`
+	- recursively render children
