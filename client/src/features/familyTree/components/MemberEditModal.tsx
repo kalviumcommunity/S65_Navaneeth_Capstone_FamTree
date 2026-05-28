@@ -1,17 +1,16 @@
-// client/src/features/familyTree/components/MemberEditModal.jsx
-
 import { useEffect, useMemo, useState } from 'react'
-import { useFamilyTreeStore } from '../store/useFamilyTreeStore'
+import { useTreeStore, TreeConstants } from '../store/useTreeStore'
+import type { Gender } from '../types'
 
-function parseTags(text) {
+function parseTags(text: string) {
   return String(text || '')
     .split(',')
     .map((t) => t.trim())
     .filter(Boolean)
 }
 
-function GenderToggle({ value, onChange }) {
-  const opts = ['Male', 'Female', 'Other']
+function GenderToggle({ value, onChange }: { value: Gender; onChange: (g: Gender) => void }) {
+  const opts: Gender[] = ['Male', 'Female', 'Other']
   return (
     <div className="inline-flex rounded-xl border bg-white p-1">
       {opts.map((o) => (
@@ -32,22 +31,26 @@ function GenderToggle({ value, onChange }) {
 }
 
 export default function MemberEditModal() {
-  const open = useFamilyTreeStore((s) => s.modalOpen)
-  const memberId = useFamilyTreeStore((s) => s.modalMemberId)
-  const member = useFamilyTreeStore((s) => (memberId && memberId !== '__FIRST__' ? s.membersById[memberId] : null))
+  const open = useTreeStore((s) => s.editModal.open)
+  const memberId = useTreeStore((s) => s.editModal.memberId)
+  const membersById = useTreeStore((s) => s.membersById)
+  const loading = useTreeStore((s) => s.loading)
 
-  const close = useFamilyTreeStore((s) => s.closeMemberModal)
-  const createFirst = useFamilyTreeStore((s) => s.createFirstMember)
-  const saveEdits = useFamilyTreeStore((s) => s.saveMemberEdits)
-  const loading = useFamilyTreeStore((s) => s.loading)
+  const close = useTreeStore((s) => s.closeEdit)
+  const saveMember = useTreeStore((s) => s.saveMember)
+
+  const member = useMemo(() => {
+    if (!memberId || memberId === TreeConstants.FIRST_MEMBER_SENTINEL) return null
+    return membersById[memberId]
+  }, [memberId, membersById])
 
   const title = useMemo(() => {
-    if (memberId === '__FIRST__') return 'Add First Member'
+    if (memberId === TreeConstants.FIRST_MEMBER_SENTINEL) return 'Add First Member'
     return member?.isPlaceholder ? 'Edit Placeholder' : 'Edit Member'
   }, [memberId, member?.isPlaceholder])
 
   const [name, setName] = useState('')
-  const [gender, setGender] = useState('Other')
+  const [gender, setGender] = useState<Gender>('Other')
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [dateOfDeath, setDateOfDeath] = useState('')
   const [notes, setNotes] = useState('')
@@ -59,7 +62,7 @@ export default function MemberEditModal() {
     if (!open) return
 
     setName(member?.name && member.name !== 'Unknown' ? member.name : '')
-    setGender(member?.gender || 'Other')
+    setGender((member?.gender as Gender) || 'Other')
     setDateOfBirth(member?.dateOfBirth ? String(member.dateOfBirth).slice(0, 10) : '')
     setDateOfDeath(member?.dateOfDeath ? String(member.dateOfDeath).slice(0, 10) : '')
     setNotes(member?.notes || '')
@@ -68,10 +71,10 @@ export default function MemberEditModal() {
     setAvatar(member?.avatar || '')
   }, [open, member])
 
-  if (!open) return null
+  if (!open || !memberId) return null
 
   async function handleSave() {
-    const payload = {
+    await saveMember(memberId as any, {
       name: name.trim() || 'Unknown',
       gender,
       dateOfBirth: dateOfBirth || null,
@@ -80,17 +83,10 @@ export default function MemberEditModal() {
       familyBranch,
       relationshipTags: parseTags(tagsText),
       avatar,
-    }
-
-    if (memberId === '__FIRST__') {
-      await createFirst(payload)
-      return
-    }
-
-    await saveEdits(memberId, payload)
+    })
   }
 
-  async function onFile(e) {
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -112,7 +108,7 @@ export default function MemberEditModal() {
         <div className="flex items-start justify-between gap-4 border-b px-6 py-5">
           <div>
             <div className="text-lg font-bold text-slate-900">{title}</div>
-            <div className="mt-1 text-sm text-slate-500">Update profile details and relationships metadata.</div>
+            <div className="mt-1 text-sm text-slate-500">Update profile details for the focused view.</div>
           </div>
           <button
             type="button"
