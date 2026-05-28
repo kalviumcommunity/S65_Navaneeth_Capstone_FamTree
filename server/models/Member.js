@@ -1,6 +1,7 @@
 // server/models/Member.js
-// Member model for the family tree.
-// IMPORTANT: parentId is a self-reference (Member -> Member) to create a simple hierarchy.
+// Member model for a relationship-based family tree.
+// Backwards-compatible: keeps parentId/relation for older UI, but the new genealogy UI uses
+// parents/spouses/children arrays.
 
 const mongoose = require('mongoose');
 
@@ -19,24 +20,82 @@ const memberSchema = new mongoose.Schema(
       default: 'Other',
     },
 
-    // Store DOB as a Date so we can format it on the frontend.
+    avatar: {
+      // Store as data URL or https URL. (Simple capstone-friendly approach.)
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    // Store dates as Date so we can format them on the frontend.
     dateOfBirth: {
       type: Date,
       default: null,
     },
 
-    // Relation label (e.g., Father, Mother, Son, Daughter, etc.)
-    relation: {
+    dateOfDeath: {
+      type: Date,
+      default: null,
+    },
+
+    notes: {
       type: String,
-      required: [true, 'Relation is required'],
+      default: '',
       trim: true,
     },
 
-    // Self-referencing parent link (one parent to keep beginner-friendly).
+    familyBranch: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    relationshipTags: {
+      type: [String],
+      default: [],
+    },
+
+    // Relation label (legacy UI)
+    relation: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+
+    // Self-referencing parent link (legacy UI: one parent)
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Member',
       default: null,
+    },
+
+    // New genealogy relationship model.
+    parents: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Member',
+      default: [],
+    },
+    spouses: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Member',
+      default: [],
+    },
+    children: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Member',
+      default: [],
+    },
+
+    isPlaceholder: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // Optional persisted layout hint for the interactive tree.
+    position: {
+      x: { type: Number, default: 0 },
+      y: { type: Number, default: 0 },
     },
 
     // The user who owns this member record.

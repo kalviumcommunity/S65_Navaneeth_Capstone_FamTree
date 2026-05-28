@@ -43,7 +43,7 @@ export default function DashboardPage() {
           <p className="mt-1 text-3xl font-bold text-gray-900">{members.length}</p>
         </div>
 
-        <Link to="/members/new" className="rounded border bg-white p-4 hover:border-emerald-300">
+        <Link to="/tree" className="rounded border bg-white p-4 hover:border-emerald-300">
           <p className="text-sm text-gray-500">Quick action</p>
           <p className="mt-1 font-semibold text-emerald-700">Add a family member →</p>
         </Link>

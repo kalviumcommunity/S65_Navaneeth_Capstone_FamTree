@@ -5,8 +5,16 @@
 
 import axios from 'axios'
 
+const configuredBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
+if (import.meta.env.PROD && !configuredBaseUrl) {
+  // In production (Vercel), you almost always need VITE_API_URL pointing at your backend.
+  // Without it, requests will go to the frontend origin and likely 404 / rewrite to index.html.
+  console.warn('VITE_API_URL is not set. API calls may fail. Set it in your Vercel project env vars.')
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '',
+  baseURL: configuredBaseUrl,
 })
 
 // Attach JWT token (if available) to every request.

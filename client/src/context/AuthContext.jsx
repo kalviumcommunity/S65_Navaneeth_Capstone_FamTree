@@ -31,6 +31,9 @@ export function AuthProvider({ children }) {
 
   async function register({ name, email, password }) {
     const data = await authService.register({ name, email, password })
+    if (!data?.token || !data?.user) {
+      throw new Error('Registration failed: invalid response from server. Check VITE_API_URL and backend /api/users/register.')
+    }
     localStorage.setItem('token', data.token)
     localStorage.setItem('user', JSON.stringify(data.user))
     setToken(data.token)
@@ -40,6 +43,9 @@ export function AuthProvider({ children }) {
 
   async function login({ email, password }) {
     const data = await authService.login({ email, password })
+    if (!data?.token || !data?.user) {
+      throw new Error('Login failed: invalid response from server. Check VITE_API_URL and backend /api/users/login.')
+    }
     localStorage.setItem('token', data.token)
     localStorage.setItem('user', JSON.stringify(data.user))
     setToken(data.token)

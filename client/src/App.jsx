@@ -14,7 +14,7 @@ function HomeRedirect() {
   const { isAuthenticated, initializing } = useAuth()
 
   if (initializing) return null
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />
+  return <Navigate to={isAuthenticated ? '/tree' : '/login'} replace />
 }
 
 function App() {
