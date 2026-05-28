@@ -117,7 +117,10 @@ Members (protected — requires `Authorization: Bearer <token>`):
 ## Deployment Notes
 
 Backend (Render):
-- Set the backend env vars from `.env.example` in Render
+- Set all backend env vars from `.env.example` in Render
+- `JWT_SECRET` is required; if it is missing, the backend exits during startup
+- `MONGO_URI` must point to your MongoDB Atlas cluster
+- `FRONTEND_URL` must be your deployed Vercel URL so CORS allows the browser requests
 
 Frontend (Vercel):
 - Set `VITE_API_URL` to your Render backend URL

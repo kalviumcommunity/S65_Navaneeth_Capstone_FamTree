@@ -1,90 +1,117 @@
-// client/src/pages/FamilyTreePage.jsx
-// Shows a simple parent → children hierarchy.
-// We intentionally do NOT use any graph libraries to keep it beginner-friendly.
+import { useEffect, useMemo } from 'react'
+import ReactFlow, { Background, Controls, ReactFlowProvider, useReactFlow } from 'reactflow'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import FamilyTreeNode from '../components/FamilyTreeNode'
-import { fetchMembers } from '../services/memberService'
+import GenealogyNode from '../features/familyTree/components/GenealogyNode'
+import StarterNode from '../features/familyTree/components/StarterNode'
+import MemberEditModal from '../features/familyTree/components/MemberEditModal'
+import LinkExistingModal from '../features/familyTree/components/LinkExistingModal'
+import UnlinkModal from '../features/familyTree/components/UnlinkModal'
+import SpouseEdge from '../features/familyTree/components/edges/SpouseEdge'
+import ParentChildEdge from '../features/familyTree/components/edges/ParentChildEdge'
+import { useFamilyTreeStore } from '../features/familyTree/store/useFamilyTreeStore'
 
-export default function FamilyTreePage() {
-  const [members, setMembers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+function FamilyTreeCanvas() {
+  const { fitView } = useReactFlow()
+  const load = useFamilyTreeStore((s) => s.load)
+  const loading = useFamilyTreeStore((s) => s.loading)
+  const error = useFamilyTreeStore((s) => s.error)
+  const membersById = useFamilyTreeStore((s) => s.membersById)
+  const collapsedIds = useFamilyTreeStore((s) => s.collapsedIds)
+  const closeRadial = useFamilyTreeStore((s) => s.closeRadial)
+  const starterNodeNonce = useFamilyTreeStore((s) => s.starterNodeNonce)
 
   useEffect(() => {
-    async function load() {
-      setLoading(true)
-      setError('')
+    load()
+  }, [load])
 
-      try {
-        const result = await fetchMembers()
-        setMembers(result.data || [])
-      } catch (err) {
-        setError(err?.response?.data?.message || 'Failed to load members')
-      } finally {
-        setLoading(false)
+  const { nodes, edges } = useMemo(() => {
+    const state = useFamilyTreeStore.getState()
+    const derived = state.getDerived()
+
+    // Empty state: show a centered starter node.
+    if (Object.keys(membersById).length === 0) {
+      return {
+        nodes: [
+          {
+            id: `starter:${starterNodeNonce}`,
+            type: 'starterNode',
+            position: { x: 0, y: 0 },
+            data: {},
+            draggable: false,
+          },
+        ],
+        edges: [],
       }
     }
 
-    load()
-  }, [])
+    return derived
+  }, [membersById, collapsedIds, starterNodeNonce])
 
-  // Build a lookup from parentId -> [children]
-  const { roots, childrenMap } = useMemo(() => {
-    const byId = new Map(members.map((m) => [m._id, m]))
-    const map = {}
-
-    for (const m of members) {
-      const parentKey = m.parentId || null
-      if (!map[parentKey]) map[parentKey] = []
-      map[parentKey].push(m)
+  useEffect(() => {
+    // Keep view nicely centered after load / major changes.
+    if (nodes.length > 0) {
+      fitView({ padding: 0.3, duration: 450 })
     }
+  }, [nodes.length, fitView])
 
-    // A root is: parentId is null OR parentId refers to a missing member.
-    const rootMembers = members.filter((m) => !m.parentId || !byId.has(m.parentId))
+  const nodeTypes = useMemo(
+    () => ({
+      genealogyNode: GenealogyNode,
+      starterNode: StarterNode,
+    }),
+    []
+  )
 
-    // Keep consistent order (older first) to make the tree stable.
-    for (const key of Object.keys(map)) {
-      map[key].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
-    }
-
-    return { roots: rootMembers, childrenMap: map }
-  }, [members])
+  const edgeTypes = useMemo(
+    () => ({
+      spouseEdge: SpouseEdge,
+      parentChildEdge: ParentChildEdge,
+    }),
+    []
+  )
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Family Tree</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            This is a simple nested view: parent on top, children below.
-          </p>
-        </div>
-        <Link
-          to="/members/new"
-          className="rounded bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
-        >
-          + Add Member
-        </Link>
-      </div>
-
-      {loading ? (
-        <p className="mt-6 text-sm text-gray-600">Loading…</p>
-      ) : error ? (
-        <p className="mt-6 text-sm text-red-700">{error}</p>
-      ) : members.length === 0 ? (
-        <div className="mt-6 rounded border bg-white p-4">
-          <p className="text-gray-700">No members found.</p>
-          <p className="mt-1 text-sm text-gray-600">Add a member to start building your tree.</p>
-        </div>
-      ) : (
-        <div className="mt-6">
-          {roots.map((root) => (
-            <FamilyTreeNode key={root._id} member={root} childrenMap={childrenMap} />
-          ))}
+    <div className="h-[calc(100vh-56px)] w-full">
+      {error && (
+        <div className="absolute left-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-rose-700 shadow-sm backdrop-blur">
+          {error}
         </div>
       )}
+
+      {loading && (
+        <div className="absolute right-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm backdrop-blur">
+          Loading…
+        </div>
+      )}
+
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onPaneClick={() => closeRadial()}
+        fitView
+        minZoom={0.2}
+        maxZoom={1.8}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background gap={28} size={1} />
+        <Controls />
+      </ReactFlow>
+
+      <MemberEditModal />
+      <LinkExistingModal />
+      <UnlinkModal />
+    </div>
+  )
+}
+
+export default function FamilyTreePage() {
+  return (
+    <div className="bg-slate-50">
+      <ReactFlowProvider>
+        <FamilyTreeCanvas />
+      </ReactFlowProvider>
     </div>
   )
 }

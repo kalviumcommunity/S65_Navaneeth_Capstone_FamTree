@@ -23,9 +23,6 @@ function Header() {
               <Link to="/tree" className="text-gray-700 hover:text-emerald-700">
                 Family Tree
               </Link>
-              <Link to="/members/new" className="text-gray-700 hover:text-emerald-700">
-                Add Member
-              </Link>
             </nav>
 
             <span className="hidden sm:inline text-gray-500">{user?.email}</span>

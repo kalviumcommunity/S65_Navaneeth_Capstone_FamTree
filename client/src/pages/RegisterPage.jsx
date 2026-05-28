@@ -21,9 +21,20 @@ export default function RegisterPage() {
 
     try {
       await register({ name, email, password })
-      navigate('/dashboard')
+      navigate('/tree')
     } catch (err) {
-      setError(err?.response?.data?.message || 'Registration failed')
+      const status = err?.response?.status
+      const baseURL = err?.config?.baseURL || ''
+      const url = err?.config?.url || ''
+      const attemptedUrl = `${String(baseURL).replace(/\/$/, '')}${url}`
+
+      if (status === 404) {
+        setError(
+          `API endpoint not found (404). Check VITE_API_URL / backend deploy. Tried: ${attemptedUrl || url || 'unknown URL'}`
+        )
+      } else {
+        setError(err?.response?.data?.message || err?.message || 'Registration failed')
+      }
     } finally {
       setLoading(false)
     }

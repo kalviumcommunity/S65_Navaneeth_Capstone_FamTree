@@ -29,6 +29,7 @@ async function registerUser(req, res) {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
+    console.error('registerUser error:', error);
     return res.status(500).json({ message: 'Server error while registering user' });
   }
 }
@@ -57,6 +58,7 @@ async function loginUser(req, res) {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (error) {
+    console.error('loginUser error:', error);
     return res.status(500).json({ message: 'Server error while logging in' });
   }
 }
