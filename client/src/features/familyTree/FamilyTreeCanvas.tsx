@@ -89,6 +89,7 @@ function InnerCanvas() {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
+        zoomOnDoubleClick={false}
         minZoom={0.2}
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
