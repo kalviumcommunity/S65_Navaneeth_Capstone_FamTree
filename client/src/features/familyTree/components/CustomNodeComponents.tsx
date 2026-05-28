@@ -71,12 +71,16 @@ function RadialMenu(props: RadialMenuProps) {
         <button
           key={it.label}
           type="button"
+          onPointerDown={(e) => {
+            // Prevent canvas pan/drag from capturing this gesture.
+            e.stopPropagation()
+          }}
           onClick={(e) => {
             e.stopPropagation()
             it.onClick()
           }}
           className={
-            "pointer-events-auto absolute rounded-full border bg-white/95 px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:bg-slate-50 " +
+            "nopan nodrag pointer-events-auto absolute rounded-full border bg-white/95 px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:bg-slate-50 " +
             pos(it.at)
           }
         >
@@ -122,6 +126,10 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
 
       <button
         type="button"
+        onPointerDown={(e) => {
+          // Prevent the React Flow pane from initiating a pan gesture.
+          e.stopPropagation()
+        }}
         onClick={(e) => {
           e.stopPropagation()
           selectNode(memberId)
@@ -131,7 +139,7 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
           shiftFocus(memberId)
         }}
         className={
-          "group relative w-[210px] rounded-2xl border bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
+          "nopan nodrag group relative w-[210px] rounded-2xl border bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
           (isFocus ? 'ring-2 ring-orange-400 border-orange-200' : '')
         }
       >
@@ -183,11 +191,14 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
     return (
       <button
         type="button"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+        }}
         onClick={(e) => {
           e.stopPropagation()
           openEdit(TreeConstants.FIRST_MEMBER_SENTINEL)
         }}
-        className="relative w-[230px] rounded-3xl border border-dashed border-emerald-300 bg-white/80 p-6 text-center shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        className="nopan nodrag relative w-[230px] rounded-3xl border border-dashed border-emerald-300 bg-white/80 p-6 text-center shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
       >
         <div className="mx-auto h-14 w-14 rounded-full border-2 border-dashed border-emerald-300 bg-emerald-50" />
         <div className="mt-3 text-sm font-semibold text-slate-900">Add First Member</div>
@@ -212,17 +223,21 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
 
       <button
         type="button"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+        }}
         onClick={(e) => {
           e.stopPropagation()
-          // Placeholder nodes are primarily editable, but still allow focus shift.
+          // Placeholders should feel editable like genealogy apps.
           selectNode(memberId)
+          openEdit(memberId)
         }}
         onDoubleClick={(e) => {
           e.stopPropagation()
           shiftFocus(memberId)
         }}
         className={
-          "group relative w-[210px] rounded-2xl border border-dashed bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
+          "nopan nodrag group relative w-[210px] rounded-2xl border border-dashed bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
           (isFocus ? 'ring-2 ring-orange-400 border-orange-200' : 'border-emerald-200')
         }
       >
@@ -232,6 +247,20 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
             <div className="truncate text-sm font-semibold text-slate-900">Unknown</div>
             <div className="mt-0.5 truncate text-xs text-slate-500">Tap Edit to fill details</div>
           </div>
+
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              useTreeStore.getState().openRadial(memberId)
+            }}
+            className="nopan nodrag ml-2 h-8 w-8 rounded-full border bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+            aria-label="Open actions"
+            title="Open actions"
+          >
+            •••
+          </button>
         </div>
       </button>
 
