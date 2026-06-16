@@ -5,6 +5,14 @@ require('dotenv').config();
 const app = require('./server/app');
 const connectDB = require('./server/config/db');
 
+function listenOnPort(port) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => resolve({ server, port }));
+
+    server.on('error', reject);
+  });
+}
+
 async function start() {
   try {
     if (!process.env.JWT_SECRET) {
@@ -14,12 +22,15 @@ async function start() {
 
     await connectDB();
 
-    const port = process.env.PORT || 5000;
-    app.listen(port, () => {
-      console.log(`Server running on http://localhost:${port}`);
-    });
+    const port = Number(process.env.PORT) || 5000;
+    const { port: activePort } = await listenOnPort(port);
+    console.log(`Server running on http://localhost:${activePort}`);
   } catch (error) {
-    console.error('Failed to start server:', error.message);
+    if (error?.code === 'EADDRINUSE') {
+      console.error(`Port ${Number(process.env.PORT) || 5000} is already in use. Stop the existing server and try again.`);
+    } else {
+      console.error('Failed to start server:', error.message);
+    }
     process.exit(1);
   }
 }

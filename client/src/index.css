@@ -23,6 +23,13 @@ body {
 
 .react-flow__node {
   transition: transform 320ms ease;
+  cursor: pointer;
+  pointer-events: all !important;
+  z-index: 5;
+}
+
+.react-flow__node * {
+  pointer-events: auto;
 }
 
 .react-flow__edge-path {

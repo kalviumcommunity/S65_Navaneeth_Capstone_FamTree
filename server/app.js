@@ -13,11 +13,10 @@ const app = express();
 app.use(express.json());
 
 // CORS: allow the frontend (Vercel) + local dev.
-// For beginner projects, keeping this explicit helps avoid “CORS errors”.
-const allowedOrigins = [
-  'http://localhost:5173',
-  process.env.FRONTEND_URL?.replace(/\/$/, ''),
-].filter(Boolean);
+// In dev, Vite may fall back to a different localhost port, so allow local loopback origins broadly.
+const allowedOrigins = [process.env.FRONTEND_URL?.replace(/\/$/, '')].filter(Boolean);
+const isLocalDevOrigin = (origin) =>
+  /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '');
 
 app.use(
   cors({
@@ -28,6 +27,10 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
+
+      if (process.env.NODE_ENV !== 'production' && isLocalDevOrigin(normalizedOrigin)) {
+        return callback(null, true);
+      }
 
       return callback(new Error(`CORS blocked: ${origin}`));
     },

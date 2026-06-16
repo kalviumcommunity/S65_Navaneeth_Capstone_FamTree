@@ -19,6 +19,8 @@ const CHILD_SPACING = 220
 const Y_PARENT = -220
 const Y_LEVEL = 0
 const Y_CHILD = 240
+const NODE_W = 190
+const NODE_H = 94
 
 function uniq<T>(arr: T[]): T[] {
   return [...new Set(arr.filter(Boolean) as T[])]
@@ -82,6 +84,10 @@ function buildChildrenIds(membersById: Record<MemberId, TreeMember>, focusId: Me
     return String(membersById[a]?.name || '').localeCompare(String(membersById[b]?.name || ''))
   })
   return children
+}
+
+function nodeCenter(pos: { x: number; y: number }) {
+  return { x: pos.x + NODE_W / 2, y: pos.y + NODE_H / 2 }
 }
 
 function computeFocusGraph(params: {
@@ -186,38 +192,61 @@ function computeFocusGraph(params: {
   const edges: Edge[] = []
   const edgeSeen = new Set<string>()
 
-  // spouse edges: focus <-> spouses (only)
+  // spouse edges: a single solid connector per couple.
   for (const spouseId of spouseIds) {
     const key = [focusId, spouseId].sort().join('::')
     if (edgeSeen.has(key)) continue
     edgeSeen.add(key)
+
+    const aPos = pos[focusId] || { x: 0, y: 0 }
+    const bPos = pos[spouseId] || { x: 0, y: 0 }
+    const aCenter = nodeCenter(aPos)
+    const bCenter = nodeCenter(bPos)
+
     edges.push({
       id: `spouse:${key}`,
       source: focusId,
       target: spouseId,
       type: 'spouseEdge',
-      data: { kind: 'spouse' },
+      data: {
+        kind: 'spouse',
+        start: aCenter,
+        end: bCenter,
+      },
     })
   }
 
-  // parent-child edges: from visible parents to visible children.
+  // parent-child edges: one genogram branch per child.
   const visible = new Set([...visibleIds])
   for (const childId of visibleIds) {
     const child = membersById[childId]
     if (!child) continue
-    for (const parentId of child.parents || []) {
-      if (!visible.has(parentId)) continue
-      const key = `${parentId}->${childId}`
-      if (edgeSeen.has(key)) continue
-      edgeSeen.add(key)
-      edges.push({
-        id: `pc:${key}`,
-        source: parentId,
-        target: childId,
-        type: 'parentChildEdge',
-        data: { kind: 'parentChild' },
-      })
-    }
+    const parents = uniq((child.parents || []).filter((parentId) => visible.has(parentId)))
+    if (parents.length === 0) continue
+
+    const key = `pc:${childId}`
+    if (edgeSeen.has(key)) continue
+    edgeSeen.add(key)
+
+    const parentCenters = parents.map((parentId) => nodeCenter(pos[parentId] || { x: 0, y: 0 }))
+    const childCenter = nodeCenter(pos[childId] || { x: 0, y: 0 })
+    const childTopY = (pos[childId] || { x: 0, y: 0 }).y
+    const junctionX = parentCenters.reduce((sum, p) => sum + p.x, 0) / parentCenters.length
+    const junctionY = parentCenters.reduce((sum, p) => sum + p.y, 0) / parentCenters.length
+    const branchY = Math.max(junctionY + 44, childTopY - 24)
+
+    edges.push({
+      id: key,
+      source: parents[0],
+      target: childId,
+      type: 'parentChildEdge',
+      data: {
+        kind: 'parentChild',
+        start: { x: junctionX, y: junctionY },
+        end: { x: childCenter.x, y: childTopY },
+        branchY,
+      },
+    })
   }
 
   // parent couple spouse edge if both parents are present and linked.
@@ -229,12 +258,18 @@ function computeFocusGraph(params: {
       const key = [a._id, b._id].sort().join('::')
       if (!edgeSeen.has(key)) {
         edgeSeen.add(key)
+        const aCenter = nodeCenter(pos[a._id] || { x: 0, y: 0 })
+        const bCenter = nodeCenter(pos[b._id] || { x: 0, y: 0 })
         edges.push({
           id: `spouse:${key}`,
           source: a._id,
           target: b._id,
           type: 'spouseEdge',
-          data: { kind: 'spouse' },
+          data: {
+            kind: 'spouse',
+            start: aCenter,
+            end: bCenter,
+          },
         })
       }
     }

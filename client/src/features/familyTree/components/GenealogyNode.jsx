@@ -58,7 +58,7 @@ export default function GenealogyNode({ data }) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative z-10 nodrag nopan cursor-pointer" style={{ pointerEvents: 'all' }}>
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
       <Handle type="source" position={Position.Left} className="opacity-0" />
@@ -66,9 +66,11 @@ export default function GenealogyNode({ data }) {
 
       <button
         type="button"
+        onPointerDownCapture={(e) => e.stopPropagation()}
+        onMouseDownCapture={(e) => e.stopPropagation()}
         onClick={handleMainClick}
         className={
-          "group relative w-[190px] rounded-2xl border bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
+          "group relative w-[190px] cursor-pointer rounded-2xl border bg-white/90 p-3 text-left shadow-sm backdrop-blur transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 " +
           (isPlaceholder ? 'border-dashed' : '')
         }
       >
@@ -102,8 +104,10 @@ export default function GenealogyNode({ data }) {
 
           <button
             type="button"
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onMouseDownCapture={(e) => e.stopPropagation()}
             onClick={handleCollapseClick}
-            className="rounded-lg border bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            className="cursor-pointer rounded-lg border bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50"
             aria-label={collapsed ? 'Expand generation' : 'Collapse generation'}
             title={collapsed ? 'Expand generation' : 'Collapse generation'}
           >

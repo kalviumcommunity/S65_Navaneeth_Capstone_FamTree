@@ -67,15 +67,15 @@ function InnerCanvas() {
   )
 
   return (
-    <div className="h-[calc(100vh-56px)] w-full">
+    <div className="relative h-[calc(100vh-56px)] w-full">
       {error && (
-        <div className="absolute left-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-rose-700 shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute left-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-rose-700 shadow-sm backdrop-blur">
           {error}
         </div>
       )}
 
       {loading && (
-        <div className="absolute right-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm backdrop-blur">
+        <div className="pointer-events-none absolute right-4 top-4 z-50 rounded-2xl border bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm backdrop-blur">
           Loading…
         </div>
       )}
@@ -86,6 +86,7 @@ function InnerCanvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onPaneClick={() => closeRadial()}
+        panOnDrag={true}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
