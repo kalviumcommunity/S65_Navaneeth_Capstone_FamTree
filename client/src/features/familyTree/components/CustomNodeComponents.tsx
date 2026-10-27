@@ -36,70 +36,112 @@ function CircularMenu({
   centerActionLabel,
   onCenterAction,
   items,
+  containerSize = 240,
 }: {
   open: boolean
   centerLabel: string
   centerActionLabel: string
   onCenterAction(): void
   items: WheelItem[]
+  containerSize?: number
 }) {
   if (!open) return null
 
-  const radius = 104
-  const step = 360 / items.length
+  // 1. Reduced overall footprint by 25% (diameter: 320px -> 240px)
+  const containerDiameter = containerSize
+  const containerRadius = containerDiameter / 2 // 120px
+  const buttonDiameter = 56
+  const buttonRadius = buttonDiameter / 2 // 28px
+  const outerPadding = 14 // ~14px clearance inside the outer circle border
+
+  // 2. Inset R relative to circle's inner area: R = containerRadius - buttonRadius - outerPadding
+  const R = containerRadius - buttonRadius - outerPadding // 78px
+  const centerX = containerRadius // 120px
+  const centerY = containerRadius // 120px
+  const total = items.length
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-1/2 z-50 h-0 w-0">
-      <div className="pointer-events-auto absolute left-1/2 top-1/2 h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2">
-        <div className="absolute inset-0 rounded-full border border-slate-200/80 bg-white/55 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-sm" />
-        <div className="absolute left-1/2 top-1/2 flex h-[92px] w-[92px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-emerald-200 bg-white/95 text-center shadow-lg shadow-emerald-100/70">
+    <div
+      className="nopan nodrag pointer-events-none absolute left-1/2 top-1/2 z-50"
+      style={{
+        width: `${containerDiameter}px`,
+        height: `${containerDiameter}px`,
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
+      {/* Circular overlay boundary - all 6 buttons sit fully inside */}
+      <div className="pointer-events-auto absolute inset-0 rounded-full border border-slate-200/90 bg-white/75 shadow-[0_18px_50px_rgba(15,23,42,0.14)] backdrop-blur-md" />
+
+      {/* Center Action (Edit Profile) - user 3.2 EDIT */}
+      <div
+        className="pointer-events-auto absolute left-1/2 top-1/2 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-emerald-300 bg-white text-center shadow-md shadow-emerald-100/80 backdrop-blur-sm"
+        style={{
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <button
+          type="button"
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          onMouseDownCapture={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            onCenterAction()
+          }}
+          className="flex h-full w-full flex-col items-center justify-center rounded-full px-2 text-slate-900 transition hover:bg-emerald-50/60"
+        >
+          <div className="max-w-[58px] truncate text-[11px] font-bold leading-tight text-slate-900">{centerLabel}</div>
+          <div className="mt-0.5 text-[8.5px] font-bold uppercase tracking-[0.16em] text-emerald-600">
+            {centerActionLabel}
+          </div>
+        </button>
+      </div>
+
+      {/* 6 Circular action items distributed evenly along inset radius R */}
+      {items.map((item, index) => {
+        // angle = (i * 360 / 6) - 90  // start from top (12 o'clock)
+        const angle = (index * 360) / total - 90
+        const rad = (angle * Math.PI) / 180
+        const x = centerX + R * Math.cos(rad)
+        const y = centerY + R * Math.sin(rad)
+
+        const activeClass = item.tone === 'danger'
+          ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+          : 'border-slate-200 bg-white/95 text-slate-700 hover:bg-slate-50'
+
+        const words = item.label.split(' ')
+
+        return (
           <button
+            key={item.label}
             type="button"
+            disabled={item.disabled}
             onPointerDownCapture={(e) => e.stopPropagation()}
             onMouseDownCapture={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
-              onCenterAction()
+              if (!item.disabled) item.onClick()
             }}
-            className="flex h-full w-full flex-col items-center justify-center rounded-full px-3 text-slate-900"
+            className={
+              "nopan nodrag pointer-events-auto absolute flex h-[56px] w-[56px] items-center justify-center rounded-full border px-1.5 text-center text-[9px] font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 " +
+              activeClass
+            }
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
           >
-            <div className="max-w-[76px] truncate text-[12px] font-semibold leading-tight">{centerLabel}</div>
-            <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-600">
-              {centerActionLabel}
-            </div>
+            {words.length > 1 ? (
+              <span className="flex flex-col items-center justify-center leading-[1.05]">
+                <span>{words[0]}</span>
+                <span>{words.slice(1).join(' ')}</span>
+              </span>
+            ) : (
+              <span className="leading-tight">{item.label}</span>
+            )}
           </button>
-        </div>
-
-        {items.map((item, index) => {
-          const angle = -90 + index * step
-          const activeClass = item.tone === 'danger'
-            ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
-            : 'border-slate-200 bg-white/95 text-slate-700 hover:bg-slate-50'
-
-          return (
-            <button
-              key={item.label}
-              type="button"
-              disabled={item.disabled}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              onMouseDownCapture={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (!item.disabled) item.onClick()
-              }}
-              className={
-                "pointer-events-auto absolute left-1/2 top-1/2 flex h-[78px] w-[78px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border px-2 text-center text-[10px] font-semibold leading-tight shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 " +
-                activeClass
-              }
-              style={{
-                transform: `translate(-50%, -50%) rotate(${angle}deg) translate(${radius}px) rotate(${-angle}deg)`,
-              }}
-            >
-              {item.label}
-            </button>
-          )
-        })}
-      </div>
+        )
+      })}
     </div>
   )
 }
@@ -109,15 +151,18 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
 
   const member = useTreeStore((s) => s.membersById[memberId])
   const activeFocusId = useTreeStore((s) => s.activeFocusId)
+  const radialOpenForId = useTreeStore((s) => s.radialOpenForId)
   const selectNode = useTreeStore((s) => s.selectNode)
   const shiftFocus = useTreeStore((s) => s.shiftFocus)
   const openEdit = useTreeStore((s) => s.openEdit)
+  const closeRadial = useTreeStore((s) => s.closeRadial)
   const addParents = useTreeStore((s) => s.addParents)
   const addSpouse = useTreeStore((s) => s.addSpouse)
   const addChild = useTreeStore((s) => s.addChild)
   const deleteMember = useTreeStore((s) => s.deleteMember)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [localMenuOpen, setLocalMenuOpen] = useState(false)
 
+  const isMenuOpen = (radialOpenForId === memberId) || localMenuOpen
   const badge = useMemo(() => ringForGender(member?.gender), [member?.gender])
   const isFocus = activeFocusId === memberId
 
@@ -125,17 +170,25 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
 
   const dates = [fmtDate(member.dateOfBirth), fmtDate(member.dateOfDeath)].filter(Boolean).join(' – ')
 
+  const handleClose = () => {
+    setLocalMenuOpen(false)
+    closeRadial()
+  }
+
   const actions: WheelItem[] = [
-    { label: 'Add Parents', onClick: () => { addParents(memberId); setIsMenuOpen(false) } },
-    { label: 'Add Spouse', onClick: () => { addSpouse(memberId); setIsMenuOpen(false) } },
-    { label: 'Add Child', onClick: () => { addChild(memberId); setIsMenuOpen(false) } },
-    { label: 'Delete', tone: 'danger', onClick: () => { deleteMember(memberId); setIsMenuOpen(false) } },
-    { label: 'Link', disabled: true, onClick: () => setIsMenuOpen(false) },
-    { label: 'Unlink', disabled: true, onClick: () => setIsMenuOpen(false) },
+    { label: 'Add Parents', onClick: () => { addParents(memberId); handleClose() } },
+    { label: 'Add Spouse', onClick: () => { addSpouse(memberId); handleClose() } },
+    { label: 'Add Child', onClick: () => { addChild(memberId); handleClose() } },
+    { label: 'Delete', tone: 'danger', onClick: () => { deleteMember(memberId); handleClose() } },
+    { label: 'Link', disabled: true, onClick: handleClose },
+    { label: 'Unlink', disabled: true, onClick: handleClose },
   ]
 
   return (
-    <div className="relative z-10 nodrag nopan cursor-pointer" style={{ pointerEvents: 'all' }}>
+    <div
+      className={`relative nodrag nopan cursor-pointer w-[210px] ${isMenuOpen ? 'z-50' : 'z-10'}`}
+      style={{ pointerEvents: 'all' }}
+    >
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
       <Handle type="source" position={Position.Left} className="opacity-0" />
@@ -156,7 +209,7 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
         onClick={(e) => {
           e.stopPropagation()
           selectNode(memberId)
-          setIsMenuOpen((prev) => !prev)
+          setLocalMenuOpen((prev) => !prev)
         }}
         onDoubleClick={(e) => {
           e.stopPropagation()
@@ -195,7 +248,7 @@ export const MemberNode = memo(function MemberNode({ data }: NodeProps<TreeNodeD
         centerLabel={member.name}
         centerActionLabel="Edit"
         onCenterAction={() => {
-          setIsMenuOpen(false)
+          handleClose()
           openEdit(memberId)
         }}
         items={actions}
@@ -210,11 +263,14 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
   const shiftFocus = useTreeStore((s) => s.shiftFocus)
   const membersById = useTreeStore((s) => s.membersById)
   const activeFocusId = useTreeStore((s) => s.activeFocusId)
+  const radialOpenForId = useTreeStore((s) => s.radialOpenForId)
+  const openRadial = useTreeStore((s) => s.openRadial)
+  const closeRadial = useTreeStore((s) => s.closeRadial)
   const addParents = useTreeStore((s) => s.addParents)
   const addSpouse = useTreeStore((s) => s.addSpouse)
   const addChild = useTreeStore((s) => s.addChild)
   const deleteMember = useTreeStore((s) => s.deleteMember)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [localMenuOpen, setLocalMenuOpen] = useState(false)
 
   // Starter node: canvas is empty.
   if (data.kind === 'starter' || String(id).startsWith(TreeConstants.STARTER_NODE_ID)) {
@@ -241,20 +297,29 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
   const memberId = (data as any).memberId as string
   const member = membersById[memberId]
   const isFocus = activeFocusId === memberId
+  const isMenuOpen = (radialOpenForId === memberId) || localMenuOpen
 
   if (!member) return null
 
+  const handleClose = () => {
+    setLocalMenuOpen(false)
+    closeRadial()
+  }
+
   const actions: WheelItem[] = [
-    { label: 'Add Parents', onClick: () => { addParents(memberId); setIsMenuOpen(false) } },
-    { label: 'Add Spouse', onClick: () => { addSpouse(memberId); setIsMenuOpen(false) } },
-    { label: 'Add Child', onClick: () => { addChild(memberId); setIsMenuOpen(false) } },
-    { label: 'Delete', tone: 'danger', onClick: () => { deleteMember(memberId); setIsMenuOpen(false) } },
-    { label: 'Link', disabled: true, onClick: () => setIsMenuOpen(false) },
-    { label: 'Unlink', disabled: true, onClick: () => setIsMenuOpen(false) },
+    { label: 'Add Parents', onClick: () => { addParents(memberId); handleClose() } },
+    { label: 'Add Spouse', onClick: () => { addSpouse(memberId); handleClose() } },
+    { label: 'Add Child', onClick: () => { addChild(memberId); handleClose() } },
+    { label: 'Delete', tone: 'danger', onClick: () => { deleteMember(memberId); handleClose() } },
+    { label: 'Link', disabled: true, onClick: handleClose },
+    { label: 'Unlink', disabled: true, onClick: handleClose },
   ]
 
   return (
-    <div className="relative z-10 nodrag nopan cursor-pointer" style={{ pointerEvents: 'all' }}>
+    <div
+      className={`relative nodrag nopan cursor-pointer w-[210px] ${isMenuOpen ? 'z-50' : 'z-10'}`}
+      style={{ pointerEvents: 'all' }}
+    >
       <Handle type="target" position={Position.Top} className="opacity-0" />
       <Handle type="source" position={Position.Bottom} className="opacity-0" />
 
@@ -272,7 +337,7 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
         onClick={(e) => {
           e.stopPropagation()
           selectNode(memberId)
-          setIsMenuOpen((prev) => !prev)
+          setLocalMenuOpen((prev) => !prev)
         }}
         onDoubleClick={(e) => {
           e.stopPropagation()
@@ -297,7 +362,8 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
-              setIsMenuOpen((prev) => !prev)
+              openRadial(memberId)
+              setLocalMenuOpen((prev) => !prev)
             }}
             className="nopan nodrag ml-2 h-8 w-8 cursor-pointer rounded-full border bg-white text-slate-600 shadow-sm hover:bg-slate-50"
             aria-label="Open actions"
@@ -313,7 +379,7 @@ export const PlaceholderNode = memo(function PlaceholderNode({ data, id }: NodeP
         centerLabel="Edit"
         centerActionLabel="Open"
         onCenterAction={() => {
-          setIsMenuOpen(false)
+          handleClose()
           openEdit(memberId)
         }}
         items={actions}
